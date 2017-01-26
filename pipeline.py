@@ -78,7 +78,6 @@ TRACKER_HOST = 'tracker.archiveteam.org'
 
 
 class CheckIP(SimpleTask):
-
     def __init__(self):
         SimpleTask.__init__(self, "CheckIP")
         self._counter = 0
@@ -110,7 +109,6 @@ class CheckIP(SimpleTask):
 
 
 class PrepareDirectories(SimpleTask):
-
     def __init__(self, warc_prefix):
         SimpleTask.__init__(self, "PrepareDirectories")
         self.warc_prefix = warc_prefix
@@ -138,7 +136,6 @@ class PrepareDirectories(SimpleTask):
 
 
 class MoveFiles(SimpleTask):
-
     def __init__(self):
         SimpleTask.__init__(self, "MoveFiles")
 
@@ -156,7 +153,6 @@ class MoveFiles(SimpleTask):
 
 
 class ExtractRecordsInfo(SimpleTask):
-
     def __init__(self):
         SimpleTask.__init__(self, "ExtractRecordsInfo")
 
@@ -170,7 +166,7 @@ class ExtractRecordsInfo(SimpleTask):
         while warc_file_size > warc_file.tell():
             for record in warc_file:
                 if record.header['WARC-Type'] == 'resource' \
-                        and record.header['WARC-Target-URI'].startswith('ftp://'):
+                      and record.header['WARC-Target-URI'].startswith('ftp://'):
                     records.append(';'.join([
                         record.header['WARC-Block-Digest'],
                         record.header['WARC-Record-ID'],
@@ -179,7 +175,6 @@ class ExtractRecordsInfo(SimpleTask):
 
         with codecs.open(records_filename, 'w', encoding='utf8') as f:
             f.write('\n'.join(records))
-
 
 def get_hash(filename):
     with open(filename, 'rb') as in_file:
@@ -197,13 +192,12 @@ def stats_id_function(item):
         'pipeline_hash': PIPELINE_SHA1,
         'script_hash': SCRIPT_SHA1,
         'python_version': sys.version,
-    }
+        }
 
     return d
 
 
 class WgetArgs(object):
-
     def realize(self, item):
         wget_args = [
             WPULL_EXE,
@@ -221,8 +215,7 @@ class WgetArgs(object):
             "--wait", "0.5",
             "--random-wait",
             "--waitretry", "5",
-            "--warc-file", ItemInterpolation(
-                "%(item_dir)s/%(warc_file_base)s"),
+            "--warc-file", ItemInterpolation("%(item_dir)s/%(warc_file_base)s"),
             "--warc-header", "operator: Archive Team",
             "--warc-header", "ftp-gov-dld-script-version: " + VERSION,
             "--warc-header", ItemInterpolation("ftp-gov-item: %(item_name)s"),
@@ -234,37 +227,28 @@ class WgetArgs(object):
 
         MAX_SIZE = 10737418240
 
-        skipped = requests.get(
-            'https://raw.githubusercontent.com/ArchiveTeam/ftp-items/master/skipped_sites')
+        skipped = requests.get('https://raw.githubusercontent.com/ArchiveTeam/ftp-items/master/skipped_sites')
         if skipped.status_code != 200:
-            raise Exception(
-                'Something went wrong getting the skipped_sites list from GitHub. ABORTING.')
-        skipped_dirs = requests.get(
-            'https://raw.githubusercontent.com/ArchiveTeam/ftp-items/master/skipped_dirs')
+            raise Exception('Something went wrong getting the skipped_sites list from GitHub. ABORTING.')
+        skipped_dirs = requests.get('https://raw.githubusercontent.com/ArchiveTeam/ftp-items/master/skipped_dirs')
         if skipped_dirs.status_code != 200:
-            raise Exception(
-                'Something went wrong getting the skipped_sites list from GitHub. ABORTING.')
+            raise Exception('Something went wrong getting the skipped_sites list from GitHub. ABORTING.')
 
         for skipped_item in skipped.text.splitlines():
             if item_file.startswith(skipped_item):
                 raise Exception('This FTP will be skipped...')
 
-        skipped_dirs_ = ['ftp://' + s.strip().replace(':', '', 1)
-                         for s in skipped_dirs.text.splitlines()]
+        skipped_dirs_ = ['ftp://' + s.strip().replace(':', '', 1) for s in skipped_dirs.text.splitlines()]
 
         item_url = 'http://master.newsbuddy.net/ftplists/{0}'.format(item_file)
         item_list = requests.get(item_url)
         if item_list.status_code != 200:
-            raise Exception('You received status code %d with URL %s. ABORTING.' % (
-                item_list.status_code, item_url))
-        itemsize = int(
-            re.search(r'ITEM_TOTAL_SIZE: ([0-9]+)', item_list.text).group(1))
+            raise Exception('You received status code %d with URL %s. ABORTING.'%(item_list.status_code, item_url))
+        itemsize = int(re.search(r'ITEM_TOTAL_SIZE: ([0-9]+)', item_list.text).group(1))
         if itemsize > MAX_SIZE:
-            raise Exception('Item is %d bytes. This is larger then %d bytes. ABORTING.' % (
-                itemsize, MAX_SIZE))
+            raise Exception('Item is %d bytes. This is larger then %d bytes. ABORTING.'%(itemsize, MAX_SIZE))
 
-        urls = [u for u in item_list.text.splitlines() if u.startswith(
-            'ftp://') and not any([str(u).startswith(skip) for skip in skipped_dirs_])]
+        urls = [u for u in item_list.text.splitlines() if u.startswith('ftp://') and not any([str(u).startswith(skip) for skip in skipped_dirs_])]
 
         urls.append(item_url)
 
@@ -276,7 +260,7 @@ class WgetArgs(object):
             url = unquote(url)
 
             if '#' in url:
-                raise Exception('%s containes a bad character.' % (url))
+                raise Exception('%s containes a bad character.'%(url))
             else:
                 wget_args.append(url)
 
@@ -347,7 +331,7 @@ pipeline = Pipeline(
                 "--recursive",
                 "--partial",
                 "--partial-dir", ".rsync-tmp",
-            ]
+                ]
         ),
     ),
     SendDoneToTracker(
