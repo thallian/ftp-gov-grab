@@ -8,7 +8,10 @@ import socket
 import shutil
 import time
 import sys
-import urllib.parse
+try:
+    from urllib.parse import unquote
+except ImportError:
+    from urllib import unquote
 try:
     import requests
 except ImportError:
@@ -270,7 +273,7 @@ class WgetArgs(object):
 
         for url in urls:
             url = url.replace('&#32;', '%20').replace('&amp;', '&')
-            url = urllib.parse.unquote(url)
+            url = unquote(url)
 
             if '#' in url:
                 raise Exception('%s containes a bad character.' % (url))
